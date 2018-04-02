@@ -16,71 +16,85 @@ What is f(10**25)?
 """
 from math import *
 import matplotlib.pyplot as plt
-import numpy
+import numpy as np
 
 
-def subset_sum(numbers, target, partial=[],solutions = set()):
-    s = sum(partial)
-    # check if the partial sum is equals to target
-    if s == target: 
-        solutions.add(tuple(partial))
-#        if not partial in solutions:
-#            solutions.append(partial)
-           # print "sum(%s)=%s" % (partial, target)
-            
-    if s >= target:
-        return len(solutions)   # if we reach the number why bother to continue
 
-    for i in range(len(numbers)):
-        n = numbers[i]
-        remaining = numbers[i+1:]
-        subset_sum(remaining, target, partial + [n],solutions) 
+def subset_sum(powers,numPowers,target,solutions = set(),j = 0):
+
+   # print j
+    s = np.dot(powers,numPowers)
+    
+    if s== target:
+        solutions.add(tuple(numPowers))
+
+    if s>= target:
+        return len(solutions)
+    if j<len(numPowers):
         
-
+        for i in range(3):
+            numPowers[j] = i
+            subset_sum(powers,numPowers,target,solutions,j+1)
+        numPowers[j] =0
+        
     return len(solutions)
 
-def F(n):
+    
+
+def FSmallN(n):
+    '''Nieve solution which is solves with iteration. Scales badly '''
+    if n>1000:
+        return -1
+
     largestPower = int(floor(log(n,2)))
-    powers = range(largestPower+1) + range(largestPower+1)
-    powers.sort(reverse = True)
-    numbers = [pow(2,x) for x in powers]
-    numbers.sort()
+    powers = 2**np.arange(largestPower,-1,-1)
+    
+    numPowers = np.zeros(len(powers))
+    
+    solutions = set()
+    A = subset_sum(powers, numPowers,n,solutions)
+    return A
 
-    return subset_sum(numbers,n,partial = [],solutions = set())
 
 
 
+def findIteration(solution,newSolutions):
+    for i in range(len(solution)-1):
+        if solution[i]>0 and solution[i+1]==0:
+            newSolution = list(solution) #Create a new Solution
+            newSolution[i] = newSolution[i]-1 
+            newSolution[i+1] += 2
+            newSolutions.add(tuple(newSolution))
+    
+
+def F(n,solutions = []):
+    
+    newSolutions = set()
+    numSolutions = 0
+    if len(solutions) ==0:
+        solutions = [map(int, str(bin(n))[2:])] #Convert to binary and make into list
+        numSolutions += 1
+
+    for solutioni in solutions: #For each solution in thing
+        #Find all of the 
+        findIteration(solutioni,newSolutions)        
+    print(len(newSolutions))
+    numSolutions += len(newSolutions)
+    if len(newSolutions)>0:
+        solutions = None #Clear the memory spot of solutions
+        numSolutions += F(n,newSolutions)
+        
+    return numSolutions
 
 if __name__ == '__main__':
-    #F(9)
-    N = 4
-    plt.clf()
-    seeds = [2]
-    for seed in seeds:
-        X = range(1,N+1)
-        X = [seed*pow(5,x) for x in X]
-
-        R = map(F,X)
-        plt.plot(R)
-    
-    names = map(str,seeds)
-    plt.legend(names)
-    
-#    golden = (1 + 5 ** 0.5) / 2
-#    N = 2**7
-#    print F(N)
-#    plt.clf()
-#    X = numpy.arange(1,N+1)
-#    R = 0*X
-#
-#    for i in X:
-#        R[i-1] = F(i)
-#       # print bin(i), bin(R[i-1])
-#    plt.plot(X,R)
-#    R2 = R[:N/2]
-#    for i in range(2):
-#        R2 = numpy.append(R2,golden*R[N/4:N/2]) 
-#        
-# 
-#    R2 =  map(round,R2)
-#    plt.plot(X,R2)
+    print 'num solutions', F(10**18)
+#    N = 10**np.arange(1,10)
+#    plt.plot(map(F,N))
+#    
+    #Debugging    
+#    R = range(1,100)
+#    A =  map(FSmallN,R)
+#    B = map(F,R)
+#    print A ==B
+#    
+#    
